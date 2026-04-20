@@ -1,4 +1,4 @@
-// Jenkinsfile — target-project 流水线配置
+// Jenkinsfile — target-project 流水线配置（Windows 版本）
 //
 // 触发条件:
 //   - PR 创建/更新时：执行 PR 审查 Agent + 跑测试 + 失败分类
@@ -15,8 +15,8 @@ pipeline {
     }
 
     environment {
-        PYTHON       = 'python'
-        AGENTS_DIR   = 'agents'
+        PYTHON     = 'python'
+        AGENTS_DIR = 'agents'
         // TODO: 在 Jenkins Credentials 中配置后取消注释
         // DOUBAO_API_KEY = credentials('DOUBAO_API_KEY')
         // GITHUB_TOKEN   = credentials('GITHUB_TOKEN')
@@ -30,14 +30,14 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh '${PYTHON} -m pip install -r requirements.txt'
+                bat '%PYTHON% -m pip install -r requirements.txt'
             }
         }
 
         stage('Agent: PR Review') {
             when { expression { params.PR_NUMBER != '' } }
             steps {
-                sh "${PYTHON} ${AGENTS_DIR}/agent_pr_review.py ${params.PR_NUMBER}"
+                bat "%PYTHON% %AGENTS_DIR%/agent_pr_review.py ${params.PR_NUMBER}"
             }
             post {
                 failure { echo 'PR 审查 Agent 失败，跳过（不影响构建）' }
@@ -46,20 +46,21 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                sh '''
-                    ${PYTHON} -m pytest tests/ \
-                        --json-report --json-report-file=report.json \
-                        --cov=app --cov-report=xml:coverage.xml \
-                        -v || true
-                '''
+                bat """
+                    %PYTHON% -m pytest tests/ ^
+                        --json-report --json-report-file=report.json ^
+                        --cov=app --cov-report=xml:coverage.xml ^
+                        -v
+                    exit /b 0
+                """
             }
         }
 
         stage('Agent: Failure Triage') {
             steps {
                 script {
-                    def exitCode = sh(
-                        script: "${PYTHON} ${AGENTS_DIR}/agent_failure_triage.py report.json ${BUILD_URL}",
+                    def exitCode = bat(
+                        script: "%PYTHON% %AGENTS_DIR%/agent_failure_triage.py report.json ${BUILD_URL}",
                         returnStatus: true
                     )
                     if (exitCode != 0) {
@@ -71,7 +72,7 @@ pipeline {
 
         stage('Agent: Coverage') {
             steps {
-                sh "${PYTHON} ${AGENTS_DIR}/agent_coverage.py coverage.xml || true"
+                bat "%PYTHON% %AGENTS_DIR%/agent_coverage.py coverage.xml"
             }
         }
 
@@ -79,8 +80,8 @@ pipeline {
             when { expression { params.BASE_TAG != '' } }
             steps {
                 script {
-                    def exitCode = sh(
-                        script: "${PYTHON} ${AGENTS_DIR}/agent_impact.py ${params.BASE_TAG} ${params.HEAD_TAG}",
+                    def exitCode = bat(
+                        script: "%PYTHON% %AGENTS_DIR%/agent_impact.py ${params.BASE_TAG} ${params.HEAD_TAG}",
                         returnStatus: true
                     )
                     if (exitCode != 0) {
@@ -98,7 +99,7 @@ pipeline {
                 }
             }
             steps {
-                sh "${PYTHON} ${AGENTS_DIR}/agent_test_updater.py ${params.PR_NUMBER} || true"
+                bat "%PYTHON% %AGENTS_DIR%/agent_test_updater.py ${params.PR_NUMBER}"
             }
         }
     }
