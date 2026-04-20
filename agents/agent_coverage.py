@@ -124,6 +124,48 @@ def generate_test_draft(source_code: str, file_path: str, missing_lines: list[in
     return raw.strip()
 
 
+def create_github_pr(branch_name: str, file_path: str, new_content: str, pr_title: str, pr_body: str) -> str:
+    """在 GitHub 上创建包含测试草稿的 PR，返回 PR URL"""
+    from github import Github, GithubException, Auth
+
+    g = Github(auth=Auth.Token(config.GITHUB_TOKEN))
+    repo = g.get_repo(config.GITHUB_REPO)
+
+    try:
+        main_sha = repo.get_branch("main").commit.sha
+
+        try:
+            repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=main_sha)
+        except GithubException as e:
+            if e.status != 422:
+                raise
+
+        try:
+            existing = repo.get_contents(file_path, ref=branch_name)
+            repo.update_file(
+                path=file_path,
+                message=f"auto: 更新覆盖率草稿 - {file_path}",
+                content=new_content,
+                sha=existing.sha,
+                branch=branch_name,
+            )
+        except GithubException:
+            repo.create_file(
+                path=file_path,
+                message=f"auto: 新增覆盖率草稿 - {file_path}",
+                content=new_content,
+                branch=branch_name,
+            )
+
+        pr = repo.create_pull(title=pr_title, body=pr_body, head=branch_name, base="main")
+        print(f"[agent_coverage] 已创建 PR: {pr.html_url}")
+        return pr.html_url
+
+    except GithubException as e:
+        print(f"[agent_coverage] 创建 PR 失败: {e}")
+        return f"https://github.com/{config.GITHUB_REPO}/pulls"
+
+
 def run(report_path: str) -> int:
     """Agent 主入口"""
     print(f"[agent_coverage] 开始分析覆盖率报告: {report_path}")
@@ -142,6 +184,7 @@ def run(report_path: str) -> int:
     print(f"[agent_coverage] 发现 {len(low_modules)} 个低覆盖率模块，开始生成草稿...")
 
     drafts = []
+    pr_urls = []
     for module in low_modules[:5]:  # 每次最多处理 5 个，避免 token 超限
         try:
             source = get_source_code(module["file"])
@@ -152,6 +195,17 @@ def run(report_path: str) -> int:
                 "draft": draft,
             })
             print(f"[agent_coverage] 已生成草稿: {module['file']} ({module['coverage']}%)")
+
+            # 为每个低覆盖率模块创建草稿 PR
+            module_name = module["file"].replace("app/", "").replace(".py", "")
+            pr_url = create_github_pr(
+                branch_name=f"auto/coverage-draft-{module_name}",
+                file_path=f"tests/drafts/draft_test_{module_name}_coverage.py",
+                new_content=draft,
+                pr_title=f"[自动] 覆盖率补全草稿 - {module['file']}",
+                pr_body=f"## AI 生成的测试用例草稿\n\n`{module['file']}` 当前覆盖率 **{module['coverage']}%**，低于阈值 {COVERAGE_THRESHOLD}%。\n\n> 请审核后手动将有价值的用例复制到正式测试文件，然后删除此草稿文件。",
+            )
+            pr_urls.append(pr_url)
         except Exception as e:
             print(f"[agent_coverage] 生成草稿失败 {module['file']}: {e}")
 
@@ -164,6 +218,7 @@ def run(report_path: str) -> int:
         f"- `{d['file']}` 草稿已生成"
         for d in drafts
     )
+    pr_list = "\n".join(f"- {url}" for url in pr_urls) or "无"
 
     notifier.send(
         role="qa",
@@ -172,8 +227,7 @@ def run(report_path: str) -> int:
             f"**覆盖率阈值**: {COVERAGE_THRESHOLD}%\n\n"
             f"**低覆盖率模块**:\n{module_list}\n\n"
             f"**已生成草稿**:\n{draft_list or '无'}\n\n"
-            f"请在代码仓库中查看草稿 PR 并审核合并。\n\n"
-            f"TODO: 草稿 PR 链接（需实现 create_github_pr 后自动填入）"
+            f"**草稿 PR**:\n{pr_list}"
         ),
         level="warning",
     )
