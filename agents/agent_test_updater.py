@@ -121,16 +121,20 @@ def analyze_diff_and_generate_updates(diff: str, test_files_content: dict) -> di
     "affected_tests": ["受影响的测试文件路径列表"],
     "suggestions": [
         {{
-            "file": "测试文件路径",
-            "action": "modify 或 add 或 delete",
-            "description": "需要做什么修改，用中文说明",
-            "draft_code": "修改后的测试代码草稿（如果是 modify 或 add）"
+            "file": "tests/drafts/draft_test_xxx_pr{pr_number}.py",
+            "action": "add",
+            "description": "需要新增哪些测试用例，用中文说明",
+            "draft_code": "完整的草稿测试代码，注意不要修改原有测试文件"
         }}
     ],
     "summary": "整体影响的中文摘要，2-3句话"
 }}
 
-只返回 JSON，不要有其他文字。"""
+重要规则：
+- 草稿文件统一放在 tests/drafts/ 目录下
+- 文件名格式：draft_test_<模块名>_pr{pr_number}.py
+- 不要修改原有测试文件，只生成新的草稿文件
+- 只返回 JSON，不要有其他文字。"""
 
     response = client.chat.completions.create(
         model=config.DOUBAO_MODEL,
@@ -192,12 +196,19 @@ def run(pr_number: int):
     # 4. 如果有需要更新的测试，创建 PR
     pr_url = "（无需更新）"
     if result.get("suggestions"):
+        # 草稿文件统一放到 tests/drafts/ 目录，不覆盖原有测试文件
+        suggestion = result["suggestions"][0]
+        draft_file = suggestion.get("file", f"tests/drafts/draft_test_pr{pr_number}.py")
+        # 确保路径在 tests/drafts/ 下
+        if not draft_file.startswith("tests/drafts/"):
+            draft_file = f"tests/drafts/draft_test_pr{pr_number}.py"
+
         pr_url = create_github_pr(
             branch_name=f"auto/update-tests-for-pr-{pr_number}",
-            file_path=result["suggestions"][0]["file"],
-            new_content=result["suggestions"][0].get("draft_code", ""),
-            pr_title=f"[自动] 更新测试用例 - 关联 PR #{pr_number}",
-            pr_body=result["summary"],
+            file_path=draft_file,
+            new_content=suggestion.get("draft_code", ""),
+            pr_title=f"[自动] 测试用例草稿 - 关联 PR #{pr_number}",
+            pr_body=f"## AI 生成的测试用例草稿\n\n{result['summary']}\n\n> 请审核后手动将有价值的用例复制到正式测试文件，然后删除此草稿文件。",
         )
 
     # 5. 发送飞书通知
