@@ -25,7 +25,7 @@ FEISHU_WEBHOOK_MANAGER = "https://open.feishu.cn/open-apis/bot/v2/hook/a60a7cbd-
 # ── GitHub 配置 ──────────────────────────────────────────────
 # TODO: 在 GitHub Settings → Developer settings → Personal access tokens 创建
 # 需要的权限: repo（读取代码和 PR）、pull_requests（写评论）
-GITHUB_TOKEN = "ghp_FpryhNpfNOY6K3GNmIZY8Qjx3pvvx83AokTt"
+GITHUB_TOKEN = "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"
 GITHUB_REPO  = "lnQx112/target-project"        # TODO: 替换为你的仓库，格式: 组织/仓库名
 
 
