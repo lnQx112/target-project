@@ -109,7 +109,7 @@ def get_task_summary() -> dict:
     return {
         "total":           total,
         "done":            done,
-        "completion_rate": done / (total or 1),
+        "completion_rate": done / total,   # BUG: total 为 0 时崩溃
         "pending":         len([t for t in _tasks.values() if t.status == Task.STATUS_PENDING]),
         "in_progress":     len([t for t in _tasks.values() if t.status == Task.STATUS_IN_PROGRESS]),
     }
