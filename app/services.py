@@ -93,7 +93,7 @@ def get_high_priority_tasks() -> list[Task]:
     导致 priority=3 的任务无法被正确筛选出来。
     正确做法: t.priority == 3 或 t.is_high_priority()
     """
-    return [t for t in _tasks.values() if t.priority == "3"]  # BUG: 应为整数 3
+    return [t for t in _tasks.values() if t.priority == 3]
 
 
 def get_task_summary() -> dict:
@@ -109,7 +109,7 @@ def get_task_summary() -> dict:
     return {
         "total":           total,
         "done":            done,
-        "completion_rate": done / total,   # BUG: total 为 0 时崩溃
+        "completion_rate": done / (total or 1),
         "pending":         len([t for t in _tasks.values() if t.status == Task.STATUS_PENDING]),
         "in_progress":     len([t for t in _tasks.values() if t.status == Task.STATUS_IN_PROGRESS]),
     }
