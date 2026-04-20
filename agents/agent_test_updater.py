@@ -80,7 +80,7 @@ def get_file_content(file_path: str) -> str:
     return resp.text
 
 
-def analyze_diff_and_generate_updates(diff: str, test_files_content: dict) -> dict:
+def analyze_diff_and_generate_updates(diff: str, test_files_content: dict, pr_number: int) -> dict:
     """
     调用豆包分析 diff，生成测试用例更新草稿。
 
@@ -121,7 +121,7 @@ def analyze_diff_and_generate_updates(diff: str, test_files_content: dict) -> di
     "affected_tests": ["受影响的测试文件路径列表"],
     "suggestions": [
         {{
-            "file": "tests/drafts/draft_test_xxx_pr{pr_number}.py",
+            "file": f"tests/drafts/draft_test_xxx_pr{pr_number}.py",
             "action": "add",
             "description": "需要新增哪些测试用例，用中文说明",
             "draft_code": "完整的草稿测试代码，注意不要修改原有测试文件"
@@ -155,20 +155,54 @@ def create_github_pr(branch_name: str, file_path: str, new_content: str, pr_titl
     """
     在 GitHub 上创建一个包含测试用例草稿的 PR。
     返回 PR 的 URL。
-
-    TODO: 这里简化了流程，实际需要：
-          1. 创建新分支
-          2. 提交文件修改
-          3. 创建 PR
-          完整实现可参考 PyGithub 库：pip install PyGithub
     """
-    # TODO: 用 PyGithub 实现完整的 PR 创建流程
-    # from github import Github
-    # g = Github(config.GITHUB_TOKEN)
-    # repo = g.get_repo(config.GITHUB_REPO)
-    # ...
-    print(f"[agent_test_updater] TODO: 创建 PR，分支: {branch_name}")
-    return f"https://github.com/{config.GITHUB_REPO}/pull/PLACEHOLDER"
+    from github import Github, GithubException, Auth
+
+    g = Github(auth=Auth.Token(config.GITHUB_TOKEN))
+    repo = g.get_repo(config.GITHUB_REPO)
+
+    try:
+        main_branch = repo.get_branch("main")
+        main_sha = main_branch.commit.sha
+
+        try:
+            repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=main_sha)
+            print(f"[agent_test_updater] 已创建分支: {branch_name}")
+        except GithubException as e:
+            if e.status == 422:
+                print(f"[agent_test_updater] 分支已存在: {branch_name}")
+            else:
+                raise
+
+        try:
+            existing = repo.get_contents(file_path, ref=branch_name)
+            repo.update_file(
+                path=file_path,
+                message=f"auto: 更新测试用例草稿 - {file_path}",
+                content=new_content,
+                sha=existing.sha,
+                branch=branch_name,
+            )
+        except GithubException:
+            repo.create_file(
+                path=file_path,
+                message=f"auto: 新增测试用例草稿 - {file_path}",
+                content=new_content,
+                branch=branch_name,
+            )
+
+        pr = repo.create_pull(
+            title=pr_title,
+            body=pr_body,
+            head=branch_name,
+            base="main",
+        )
+        print(f"[agent_test_updater] 已创建 PR: {pr.html_url}")
+        return pr.html_url
+
+    except GithubException as e:
+        print(f"[agent_test_updater] 创建 PR 失败: {e}")
+        return f"https://github.com/{config.GITHUB_REPO}/pulls"
 
 
 def run(pr_number: int):
@@ -191,7 +225,7 @@ def run(pr_number: int):
             pass
 
     # 3. 调用 LLM 分析
-    result = analyze_diff_and_generate_updates(diff, test_files_content)
+    result = analyze_diff_and_generate_updates(diff, test_files_content, pr_number)
 
     # 4. 如果有需要更新的测试，创建 PR
     pr_url = "（无需更新）"
