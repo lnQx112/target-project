@@ -15,11 +15,14 @@ pipeline {
     }
 
     environment {
-        PYTHON     = 'python'
-        AGENTS_DIR = 'agents'
-        // TODO: 在 Jenkins Credentials 中配置后取消注释
-        // DOUBAO_API_KEY = credentials('DOUBAO_API_KEY')
-        // GITHUB_TOKEN   = credentials('GITHUB_TOKEN')
+        PYTHON                = 'python'
+        AGENTS_DIR            = 'agents'
+        DOUBAO_API_KEY        = credentials('DOUBAO_API_KEY')
+        GITHUB_TOKEN          = credentials('GITHUB_TOKEN_ENV')
+        FEISHU_WEBHOOK_DEV     = credentials('FEISHU_WEBHOOK')
+        FEISHU_WEBHOOK_QA      = credentials('FEISHU_WEBHOOK')
+        FEISHU_WEBHOOK_OPS     = credentials('FEISHU_WEBHOOK')
+        FEISHU_WEBHOOK_MANAGER = credentials('FEISHU_WEBHOOK')
     }
 
     stages {
