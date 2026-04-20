@@ -30,7 +30,8 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                bat '%PYTHON% -m pip install -r requirements.txt'
+                // 安装 python-dotenv 用于加载 .env 文件
+                bat '%PYTHON% -m pip install -r requirements.txt python-dotenv'
             }
         }
 

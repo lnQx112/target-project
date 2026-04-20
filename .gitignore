@@ -1,0 +1,14 @@
+# .gitignore
+# 忽略敏感信息文件，不推到 GitHub
+.env
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# 测试报告（本地生成，不需要提交）
+report.json
+coverage.xml
+.coverage
