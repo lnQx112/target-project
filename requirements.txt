@@ -4,3 +4,5 @@ pytest-json-report
 pytest-cov
 requests
 openai
+PyGithub
+python-dotenv

@@ -152,19 +152,63 @@ def create_github_pr(branch_name: str, file_path: str, new_content: str, pr_titl
     在 GitHub 上创建一个包含测试用例草稿的 PR。
     返回 PR 的 URL。
 
-    TODO: 这里简化了流程，实际需要：
-          1. 创建新分支
-          2. 提交文件修改
-          3. 创建 PR
-          完整实现可参考 PyGithub 库：pip install PyGithub
+    流程：
+    1. 获取 main 分支最新的 commit SHA
+    2. 基于 main 创建新分支
+    3. 提交文件修改到新分支
+    4. 创建 PR
     """
-    # TODO: 用 PyGithub 实现完整的 PR 创建流程
-    # from github import Github
-    # g = Github(config.GITHUB_TOKEN)
-    # repo = g.get_repo(config.GITHUB_REPO)
-    # ...
-    print(f"[agent_test_updater] TODO: 创建 PR，分支: {branch_name}")
-    return f"https://github.com/{config.GITHUB_REPO}/pull/PLACEHOLDER"
+    from github import Github, GithubException, Auth
+
+    g = Github(auth=Auth.Token(config.GITHUB_TOKEN))
+    repo = g.get_repo(config.GITHUB_REPO)
+
+    try:
+        # 1. 获取 main 分支最新 SHA
+        main_branch = repo.get_branch("main")
+        main_sha = main_branch.commit.sha
+
+        # 2. 创建新分支
+        try:
+            repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=main_sha)
+            print(f"[agent_test_updater] 已创建分支: {branch_name}")
+        except GithubException as e:
+            if e.status == 422:  # 分支已存在
+                print(f"[agent_test_updater] 分支已存在: {branch_name}")
+            else:
+                raise
+
+        # 3. 提交文件到新分支（如果文件已存在则更新，否则新建）
+        try:
+            existing = repo.get_contents(file_path, ref=branch_name)
+            repo.update_file(
+                path=file_path,
+                message=f"auto: 更新测试用例草稿 - {file_path}",
+                content=new_content,
+                sha=existing.sha,
+                branch=branch_name,
+            )
+        except GithubException:
+            repo.create_file(
+                path=file_path,
+                message=f"auto: 新增测试用例草稿 - {file_path}",
+                content=new_content,
+                branch=branch_name,
+            )
+
+        # 4. 创建 PR
+        pr = repo.create_pull(
+            title=pr_title,
+            body=pr_body,
+            head=branch_name,
+            base="main",
+        )
+        print(f"[agent_test_updater] 已创建 PR: {pr.html_url}")
+        return pr.html_url
+
+    except GithubException as e:
+        print(f"[agent_test_updater] 创建 PR 失败: {e}")
+        return f"https://github.com/{config.GITHUB_REPO}/pulls"
 
 
 def run(pr_number: int):
