@@ -41,11 +41,12 @@ class Task:
 
     VALID_STATUSES = [STATUS_PENDING, STATUS_IN_PROGRESS, STATUS_DONE, STATUS_CANCELLED]
 
-    def __init__(self, task_id: int, title: str, owner_id: int, priority: int = 1):
+    def __init__(self, task_id: int, title: str, owner_id: int, priority: int = 1, deadline: datetime | None = None):
         self.task_id   = task_id
         self.title     = title
         self.owner_id  = owner_id
         self.priority  = priority       # 1=低 2=中 3=高
+        self.deadline  = deadline       # 截止日期，可为空
         self.status    = self.STATUS_PENDING
         self.created_at = datetime.now()
         self.updated_at = datetime.now()
@@ -56,6 +57,7 @@ class Task:
             "title":      self.title,
             "owner_id":   self.owner_id,
             "priority":   self.priority,
+            "deadline":   self.deadline.isoformat() if self.deadline else None,
             "status":     self.status,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
