@@ -134,3 +134,12 @@ def calculate_workdays(start: datetime, end: datetime) -> int:
             count += 1
         current += timedelta(days=1)
     return count
+
+
+def get_overdue_tasks_count(tasks: list) -> int:
+    """统计超期任务数量"""
+    now = datetime.now()
+    return sum(
+        1 for t in tasks
+        if hasattr(t, "deadline") and t.deadline and t.deadline < now
+    )
