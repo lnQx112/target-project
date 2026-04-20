@@ -50,6 +50,9 @@ def parse_coverage_report(report_path: str) -> list[dict]:
     low_coverage = []
     for cls in root.iter("class"):
         filename = cls.get("filename", "")
+        # coverage.xml 里的路径是相对于 --cov 参数的，需要加回 app/ 前缀
+        if filename and not filename.startswith("app/"):
+            filename = "app/" + filename
         line_rate = float(cls.get("line-rate", 1.0)) * 100
 
         if line_rate < COVERAGE_THRESHOLD:
