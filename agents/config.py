@@ -16,17 +16,17 @@ DOUBAO_BASE_URL = "https://ark.cn-beijing.volces.com/api/coding/v3"
 # 在飞书群里添加「自定义机器人」，复制 Webhook 地址填入下方
 # 文档: https://open.feishu.cn/document/client-docs/bot-5/add-custom-bot
 # TODO: 按角色分别配置不同的群，也可以都填同一个群
-FEISHU_WEBHOOK_DEV     = "https://open.feishu.cn/open-apis/bot/v2/hook/PLACEHOLDER"  # 开发者群
-FEISHU_WEBHOOK_QA      = "https://open.feishu.cn/open-apis/bot/v2/hook/PLACEHOLDER"  # 测试群
-FEISHU_WEBHOOK_OPS     = "https://open.feishu.cn/open-apis/bot/v2/hook/PLACEHOLDER"  # 运维群
-FEISHU_WEBHOOK_MANAGER = "https://open.feishu.cn/open-apis/bot/v2/hook/PLACEHOLDER"  # 管理者群
+FEISHU_WEBHOOK_DEV     = "https://open.feishu.cn/open-apis/bot/v2/hook/a60a7cbd-9c42-4ca3-bf9b-515aacec3637"  # 开发者群
+FEISHU_WEBHOOK_QA      = "https://open.feishu.cn/open-apis/bot/v2/hook/a60a7cbd-9c42-4ca3-bf9b-515aacec3637"  # 测试群
+FEISHU_WEBHOOK_OPS     = "https://open.feishu.cn/open-apis/bot/v2/hook/a60a7cbd-9c42-4ca3-bf9b-515aacec3637"  # 运维群
+FEISHU_WEBHOOK_MANAGER = "https://open.feishu.cn/open-apis/bot/v2/hook/a60a7cbd-9c42-4ca3-bf9b-515aacec3637"  # 管理者群
 
 
 # ── GitHub 配置 ──────────────────────────────────────────────
 # TODO: 在 GitHub Settings → Developer settings → Personal access tokens 创建
 # 需要的权限: repo（读取代码和 PR）、pull_requests（写评论）
-GITHUB_TOKEN = "PLACEHOLDER_GITHUB_TOKEN"
-GITHUB_REPO  = "your-org/your-repo"        # TODO: 替换为你的仓库，格式: 组织/仓库名
+GITHUB_TOKEN = "ghp_FpryhNpfNOY6K3GNmIZY8Qjx3pvvx83AokTt"
+GITHUB_REPO  = "lnQx112/target-project"        # TODO: 替换为你的仓库，格式: 组织/仓库名
 
 
 # ── Jenkins 配置 ─────────────────────────────────────────────
