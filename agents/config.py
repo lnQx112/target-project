@@ -7,9 +7,9 @@
 # ── 豆包大模型（字节跳动）────────────────────────────────────
 # 官网: https://console.volcengine.com/ark
 # TODO: 注册后在控制台创建 API Key 填入下方
-DOUBAO_API_KEY  = "PLACEHOLDER_DOUBAO_API_KEY"
-DOUBAO_MODEL    = "doubao-pro-32k"          # TODO: 按需替换模型名
-DOUBAO_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
+DOUBAO_API_KEY  = "ark-013c6052-3936-4fff-b8a9-59ecd9ecd9eda443-e2053"
+DOUBAO_MODEL    = "doubao-seed-2.0-code"          # TODO: 按需替换模型名
+DOUBAO_BASE_URL = "https://ark.cn-beijing.volces.com/api/coding/v3"
 
 
 # ── 飞书机器人 Webhook ───────────────────────────────────────
