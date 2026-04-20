@@ -4,10 +4,6 @@ test_services.py — 业务逻辑层测试
 包含会触发 bug 的测试用例，用于触发 Agent 场景二（失败分类）。
 """
 
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app"))
-
 import pytest
 import services
 

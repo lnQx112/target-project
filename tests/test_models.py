@@ -5,10 +5,6 @@ test_models.py — 模型层测试
 缺少的测试用例已在注释中标注。
 """
 
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app"))
-
 import pytest
 from models import User, Task
 
