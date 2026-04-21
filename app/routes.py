@@ -5,10 +5,6 @@ routes.py — HTTP 接口层
 """
 
 from flask import Flask, request, jsonify
-import sys
-import os
-
-sys.path.insert(0, os.path.dirname(__file__))
 import services
 from utils import validate_email, validate_username, validate_priority, paginate
 
